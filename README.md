@@ -12,3 +12,6 @@ as they loop over the x coordinates, the y coordinates, then the iterations of t
 I didn't have time to implement an interface for zooming / panning / etc, 
 so I added a dropdown select box with a few pre-set values for interesting Mandelbrot and Julia fractals.
 
+* 2nd Jan - Rule 30 (elementary cellular automaton)
+
+A straightforward implementation of a cellular automaton, using rule 30.
