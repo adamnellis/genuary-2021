@@ -78,6 +78,7 @@ const patterns = {
 function setup() {
     createCanvas(800, 600);
     frameRate(15);
+    pixelDensity(1);
 
     functionSelector = createSelect();
     functionSelector.position(10, 10);
