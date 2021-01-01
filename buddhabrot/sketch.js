@@ -1,7 +1,11 @@
 
-const numSamplesPerFrame = 1_000_000;
-let maxIterations = 100;
-const pathsVisited = []
+const numSamplesPerFrame = 100_000;
+let maxIterations1 = 50;
+let maxIterations2 = 500;
+let maxIterations3 = 5000;
+let pathsVisited1 = []
+let pathsVisited2 = []
+let pathsVisited3 = []
 
 function setup() {
     createCanvas(800, 600);
@@ -12,20 +16,24 @@ function setup() {
     loadPixels();
     const d = pixelDensity();
     const scaling = max(width, height);
-    for (let yd = 0; yd < scaling*d; yd++) {
-        const row = []
-        for (let xd = 0; xd < scaling*d; xd++) {
-            row.push(0)
-        }
-        pathsVisited.push(row)
-    }
+    pathsVisited1 = empty2dArray(scaling*d);
+    pathsVisited2 = empty2dArray(scaling*d);
+    pathsVisited3 = empty2dArray(scaling*d);
+}
+
+function empty2dArray(size) {
+    return new Array(size).fill(0).map(() => new Array(size).fill(0));
+}
+
+function max2dArray(arr) {
+    return Math.max.apply(null, arr.map(function(row){ return Math.max.apply(Math, row); }));
 }
 
 function draw() {
     console.log('draw')
 
     const iterates = [];
-    for (let i = 0; i <= maxIterations; i++) {
+    for (let i = 0; i <= maxIterations3; i++) {
         iterates.push([0, 0]);
     }
 
@@ -37,11 +45,6 @@ function draw() {
 
     // Generate some random samples
     for (let sampleNum = 0; sampleNum < numSamplesPerFrame; sampleNum++) {
-        // let c_re = Math.random() * 4 - 2;
-        // let c_im = Math.random() * 4 - 2;
-        // let z_re = 0;
-        // let z_im = 0;
-
         let c_re = Math.random() * 4 - 2;
         let c_im = Math.random() * 4 - 2;
         let z_re = 0;
@@ -51,7 +54,7 @@ function draw() {
         // Iterate Mandelbrot function
         let iterationNumber;
         for (iterationNumber = 0;
-             iterationNumber <= maxIterations && (z_re*z_re + z_im*z_im) < 4;
+             iterationNumber <= maxIterations3 && (z_re*z_re + z_im*z_im) < 4;
              iterationNumber++) {
             // z = z^2 + c
             // z = (z_re + i*z_im)*(z_re + i*z_im) + (c_re + i*c_im)
@@ -66,44 +69,48 @@ function draw() {
         }
 
         // If this iterate escaped, then save its path
-        if (iterationNumber === maxIterations) {
+        if (iterationNumber !== maxIterations3) {
             for (let i = 0; i < iterationNumber-1; i++) {
                 const xd = Math.floor(scaling * d * (iterates[i][0] + 2) / 4);
                 const yd = Math.floor(scaling * d * (iterates[i][1] + 2) / 4);
 
-                pathsVisited[yd][xd] += 1;
+                // Save to a different channel depending on the speed of escape
+                if (iterationNumber < maxIterations1) {
+                    pathsVisited1[yd][xd] += 1;
+                }
+                else if (iterationNumber < maxIterations2) {
+                    pathsVisited2[yd][xd] += 1;
+                }
+                else {
+                    pathsVisited3[yd][xd] += 1;
+                }
             }
         }
     }
 
     // Paint the visited paths onto the screen pixels
-    const maxPathsPerPixel = Math.max.apply(null, pathsVisited.map(function(row){ return Math.max.apply(Math, row); }))
+    const maxPathsPerPixel1 = max2dArray(pathsVisited1);
+    const maxPathsPerPixel2 = max2dArray(pathsVisited2);
+    const maxPathsPerPixel3 = max2dArray(pathsVisited3);
 
     // For each pixel
     for (let yd = 0; yd < scaling*d; yd++) {
         for (let xd = 0; xd < scaling * d; xd++) {
 
             // Choose a colour for this pixel
-            const greyscale = pathsVisited[xd][yd] / maxPathsPerPixel;
             let red = 0;
             let green = 0;
             let blue = 0;
             let alpha = 255;
-            if (pathsVisited[xd][yd] > 0) {
-                red = 255 * greyscale;
-                green = 255 * greyscale;
-                blue = 255 * greyscale;
-                // alpha = 255 * greyscale;
+            if (maxPathsPerPixel3 > 0) {
+                red = 255 * pathsVisited3[xd][yd] / maxPathsPerPixel3;
             }
-            // if (pathsVisited[xd][yd] > 0) {
-            //     if (pathsVisited[xd][yd] > 50) {
-            //         red = 255 * greyscale;
-            //     }
-            //     else {
-            //         red = 255 * greyscale;
-            //         blue = 255 * greyscale;
-            //     }
-            // }
+            if (maxPathsPerPixel2 > 0) {
+                green = 255 * pathsVisited2[xd][yd] / maxPathsPerPixel2;
+            }
+            if (maxPathsPerPixel1 > 0) {
+                blue = 255 * pathsVisited1[xd][yd] / maxPathsPerPixel1;
+            }
 
             // Set this pixel to the chosen colour
             const pixelIndex = 4 * (yd * width * d + xd);
