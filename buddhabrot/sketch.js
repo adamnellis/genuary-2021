@@ -6,6 +6,7 @@ let maxIterations3 = 50000;
 let pathsVisited1 = []
 let pathsVisited2 = []
 let pathsVisited3 = []
+let animate = true;
 
 function setup() {
     createCanvas(800, 600);
@@ -29,7 +30,16 @@ function max2dArray(arr) {
     return Math.max.apply(null, arr.map(function(row){ return Math.max.apply(Math, row); }));
 }
 
+function keyPressed() {
+    if (key === 'd') {
+        animate = !animate;
+    }
+}
+
 function draw() {
+    if (!animate) {
+        return
+    }
     console.log('draw')
 
     const iterates = [];
@@ -50,9 +60,14 @@ function draw() {
         let z_re = 0;
         let z_im = 0;
 
-        // Check whether this point is within the main cartoid
+        // Reject points that are within the main cartoid
         const mag_c_squared = c_re * c_re + c_im * c_im;
         if (mag_c_squared * (8 * mag_c_squared - 3) < 3 / 32 - c_re) {
+            continue;
+        }
+        // Reject points that are within the period-2 bulb
+        const dist_circle_squared = (c_re + 1) * (c_re + 1) + c_im * c_im;
+        if (dist_circle_squared < 1/16) {
             continue;
         }
 
@@ -77,8 +92,7 @@ function draw() {
             iterates[iterationNumber][1] = z_im;
 
             // Cycle detection using Brent's algorithm - https://en.wikipedia.org/wiki/Cycle_detection#Brent.27s_algorithm
-            if (Math.abs(z_re - z_re_check) < 1e-12 && Math.abs(z_im - z_im_check) < 1e-12) {
-            // if (z_re === z_re_check && z_im === z_im_check) {
+            if (z_re === z_re_check && z_im === z_im_check) {
                 iterationNumber = maxIterations3;
                 break;
             }
@@ -92,7 +106,7 @@ function draw() {
         }
 
         // If this iterate escaped, then save its path - also save the reflection in the real axis
-        if (iterationNumber !== maxIterations3) {
+        if (iterationNumber < maxIterations3) {
             for (let i = 0; i < iterationNumber-1; i++) {
                 const xd = Math.floor(scaling * d * (iterates[i][0] + 2) / 4);
                 const yd = Math.floor(scaling * d * (iterates[i][1] + 2) / 4);
